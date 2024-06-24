@@ -9,6 +9,7 @@ const ShowProducts = () => {
     const registerUrl = 'http://181.176.172.117:8081/api/v1/auth/register';
     const editUrl = 'http://181.176.172.117:8081/api/v1/auth/edit/';
     const deleteUrl = 'http://181.176.172.117:8081/api/v1/auth/delete/';
+    const approveUrl = 'http://181.176.172.117:8081/api/v1/auth/approve?userId=';
 
     const [users, setUsers] = useState([]);
     const [id, setId] = useState('');
@@ -16,6 +17,10 @@ const ShowProducts = () => {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [entity, setEntity] = useState('');
+    const [expirationDate, setExpirationDate] = useState('');
+    const [state, setState] = useState('');
+
     const [operation, setOperation] = useState(1);
     const [title, setTitle] = useState('');
     const [scrollPosition, setScrollPosition] = useState(0);
@@ -35,11 +40,13 @@ const ShowProducts = () => {
         }
     }
 
-    const openModal = (op, id = '', name = '', lastName = '', email = '') => {
+    const openModal = (op, id = '', name = '', lastName = '', email = '', entity = '') => {
         setId(id);
         setName(name);
         setLastName(lastName);
         setEmail(email);
+        setEntity(entity);
+
         setPassword('');
         setOperation(op);
 
@@ -67,26 +74,27 @@ const ShowProducts = () => {
     }
 
     const validar = async () => {
-        // Guardar la posición actual del scroll
         handleScroll();
-    
+
         if (name.trim() === '') {
             show_alerta('Escribe el nombre del usuario', 'warning');
         } else if (lastName.trim() === '') {
             show_alerta('Escribe el apellido del usuario', 'warning');
         } else if (email.trim() === '') {
             show_alerta('Escribe el email del usuario', 'warning');
-        } else if (operation === 1 && password.trim() === '') {
+        } else if (entity.trim() === '') {
+            show_alerta('Escribe la entidad del usuario', 'warning');
+        } else if (operation === 2 && password.trim() === '') {
             show_alerta('Escribe la contraseña del usuario', 'warning');
         } else {
             let parametros;
             if (operation === 1) {
                 parametros = {
-                    typeUserId: 2,
+                    typeUserId: 1,
                     name: name.trim(),
                     lastName: lastName.trim(),
                     email: email.trim(),
-                    password: password.trim()
+                    entity: entity.trim()
                 };
                 await enviarSolicitud('POST', parametros, registerUrl);
             } else {
@@ -94,12 +102,12 @@ const ShowProducts = () => {
                     name: name.trim(),
                     lastName: lastName.trim(),
                     email: email.trim(),
+                    entity: entity.trim(),
                     password: password.trim()
                 };
                 await enviarSolicitud('PUT', parametros, editUrl + id);
             }
-    
-            // Restaurar la posición del scroll después de la actualización
+
             restoreScrollPosition();
         }
         getUsers();
@@ -117,7 +125,7 @@ const ShowProducts = () => {
             show_alerta(msj, tipo);
             if (tipo === 'success') {
                 document.getElementById('btnCerrar').click();
-                getUsers(); // Actualizar la lista de usuarios después de la operación
+                getUsers();
             }
         } catch (error) {
             show_alerta('Error en la solicitud', 'error');
@@ -139,7 +147,7 @@ const ShowProducts = () => {
                 try {
                     await axios.delete(deleteUrl + id);
                     show_alerta('Usuario eliminado correctamente', 'success');
-                    getUsers(); // Actualizar la lista de usuarios después de la eliminación
+                    getUsers();
                 } catch (error) {
                     show_alerta('Error al eliminar el usuario', 'error');
                     console.error('Error:', error);
@@ -149,7 +157,17 @@ const ShowProducts = () => {
             }
         });
     }
-    
+
+    const habilitarUsuario = async (userId) => {
+        try {
+            const response = await axios.post(approveUrl + userId);
+            show_alerta('Usuario habilitado correctamente', 'success');
+            getUsers();
+        } catch (error) {
+            show_alerta('Error al habilitar el usuario', 'error');
+            console.error('Error:', error);
+        }
+    }
 
     return (
         <div className='App'>
@@ -168,7 +186,7 @@ const ShowProducts = () => {
                         <div className='table-responsive'>
                             <table className='table table-bordered'>
                                 <thead>
-                                    <tr><th>#</th><th>NOMBRE</th><th>APELLIDO</th><th>EMAIL</th><th>ACCIONES</th></tr>
+                                    <tr><th>#</th><th>NOMBRE</th><th>APELLIDO</th><th>EMAIL</th><th>ENTIDAD</th><th>HABILITADO</th><th>ACCIONES</th></tr>
                                 </thead>
                                 <tbody className='table-group-divider'>
                                     {users.map((user, i) => (
@@ -177,8 +195,16 @@ const ShowProducts = () => {
                                             <td>{user.name}</td>
                                             <td>{user.lastName}</td>
                                             <td>{user.email}</td>
+                                            <td>{user.entity}</td>
                                             <td>
-                                                <button onClick={() => openModal(2, user.id, user.name, user.lastName, user.email)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalUsers'>
+                                                {user.state === 1 ? 'Sí' : (
+                                                    <button onClick={() => habilitarUsuario(user.id)} className='btn btn-success'>
+                                                        Habilitar
+                                                    </button>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <button onClick={() => openModal(2, user.id, user.name, user.lastName, user.email, user.entity)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalUsers'>
                                                     <i className='fa-solid fa-edit'></i>
                                                 </button>
                                                 &nbsp;
@@ -216,9 +242,15 @@ const ShowProducts = () => {
                                 <input type='text' id='email' className='form-control' placeholder='Email' value={email} onChange={(e) => setEmail(e.target.value)}></input>
                             </div>
                             <div className='input-group mb-3'>
-                                <span className='input-group-text'><i className='fa-solid fa-lock'></i></span>
-                                <input type='password' id='password' className='form-control' placeholder='Solo si se quiere cambiar' value={password} onChange={(e) => setPassword(e.target.value)}></input>
+                                <span className='input-group-text'><i className='fa-solid fa-dollar-sign'></i></span>
+                                <input type='text' id='entity' className='form-control' placeholder='Entidad' value={entity} onChange={(e) => setEntity(e.target.value)}></input>
                             </div>
+                            {operation === 2 && (
+                                <div className='input-group mb-3'>
+                                    <span className='input-group-text'><i className='fa-solid fa-lock'></i></span>
+                                    <input type='password' id='password' className='form-control' placeholder='Solo si se quiere cambiar' value={password} onChange={(e) => setPassword(e.target.value)}></input>
+                                </div>
+                            )}
                             <div className='d-grid col-6 mx-auto'>
                                 <button onClick={() => validar()} className='btn btn-success'>
                                     <i className='fa-solid fa-floppy-disk'></i> Guardar
