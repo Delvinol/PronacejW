@@ -16,6 +16,8 @@ const ShowProducts = () => {
     const [name, setName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
+    const [dni, setDni] = useState('');
+
     const [password, setPassword] = useState('');
     const [entity, setEntity] = useState('');
     const [expirationDate, setExpirationDate] = useState('');
@@ -40,11 +42,13 @@ const ShowProducts = () => {
         }
     }
 
-    const openModal = (op, id = '', name = '', lastName = '', email = '', entity = '') => {
+    const openModal = (op, id = '', name = '', lastName = '', email = '', dni = '', entity = '') => {
         setId(id);
         setName(name);
         setLastName(lastName);
         setEmail(email);
+        setDni(dni);
+
         setEntity(entity);
 
         setPassword('');
@@ -82,10 +86,10 @@ const ShowProducts = () => {
             show_alerta('Escribe el apellido del usuario', 'warning');
         } else if (email.trim() === '') {
             show_alerta('Escribe el email del usuario', 'warning');
+        } else if (dni.trim() === '') {
+            show_alerta('Escribe el DNI del usuario', 'warning');
         } else if (entity.trim() === '') {
             show_alerta('Escribe la entidad del usuario', 'warning');
-        } else if (operation === 2 && password.trim() === '') {
-            show_alerta('Escribe la contraseña del usuario', 'warning');
         } else {
             let parametros;
             if (operation === 1) {
@@ -94,6 +98,8 @@ const ShowProducts = () => {
                     name: name.trim(),
                     lastName: lastName.trim(),
                     email: email.trim(),
+                    dni: dni.trim(),
+
                     entity: entity.trim()
                 };
                 await enviarSolicitud('POST', parametros, registerUrl);
@@ -102,9 +108,13 @@ const ShowProducts = () => {
                     name: name.trim(),
                     lastName: lastName.trim(),
                     email: email.trim(),
-                    entity: entity.trim(),
-                    password: password.trim()
+                    dni: dni.trim(),
+
+                    entity: entity.trim()
                 };
+                if (password.trim() !== '') {
+                    parametros.password = password.trim();
+                }
                 await enviarSolicitud('PUT', parametros, editUrl + id);
             }
 
@@ -186,7 +196,7 @@ const ShowProducts = () => {
                         <div className='table-responsive'>
                             <table className='table table-bordered'>
                                 <thead>
-                                    <tr><th>#</th><th>NOMBRE</th><th>APELLIDO</th><th>EMAIL</th><th>ENTIDAD</th><th>HABILITADO</th><th>ACCIONES</th></tr>
+                                    <tr><th>#</th><th>NOMBRE</th><th>APELLIDO</th><th>EMAIL</th><th>DNI</th><th>ENTIDAD</th><th>HABILITADO</th><th>ACCIONES</th></tr>
                                 </thead>
                                 <tbody className='table-group-divider'>
                                     {users.map((user, i) => (
@@ -195,6 +205,8 @@ const ShowProducts = () => {
                                             <td>{user.name}</td>
                                             <td>{user.lastName}</td>
                                             <td>{user.email}</td>
+                                            <td>{user.dni}</td>
+
                                             <td>{user.entity}</td>
                                             <td>
                                                 {user.state === 1 ? 'Sí' : (
@@ -204,7 +216,7 @@ const ShowProducts = () => {
                                                 )}
                                             </td>
                                             <td>
-                                                <button onClick={() => openModal(2, user.id, user.name, user.lastName, user.email, user.entity)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalUsers'>
+                                                <button onClick={() => openModal(2, user.id, user.name, user.lastName, user.email,user.dni, user.entity)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalUsers'>
                                                     <i className='fa-solid fa-edit'></i>
                                                 </button>
                                                 &nbsp;
@@ -240,6 +252,10 @@ const ShowProducts = () => {
                             <div className='input-group mb-3'>
                                 <span className='input-group-text'><i className='fa-solid fa-dollar-sign'></i></span>
                                 <input type='text' id='email' className='form-control' placeholder='Email' value={email} onChange={(e) => setEmail(e.target.value)}></input>
+                            </div>
+                            <div className='input-group mb-3'>
+                                <span className='input-group-text'><i className='fa-solid fa-dollar-sign'></i></span>
+                                <input type='text' id='dni' className='form-control' placeholder='DNI' value={dni} onChange={(e) => setDni(e.target.value)}></input>
                             </div>
                             <div className='input-group mb-3'>
                                 <span className='input-group-text'><i className='fa-solid fa-dollar-sign'></i></span>

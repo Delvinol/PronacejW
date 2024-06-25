@@ -15,6 +15,8 @@ const Login = () => {
     const [name, setName] = useState('');
     const [lastName, setLastName] = useState('');
     const [entity, setEntity] = useState('');
+    const [dni, setDni] = useState('');
+
     const [isLogin, setIsLogin] = useState(true);
     const navigate = useNavigate();
 
@@ -58,7 +60,7 @@ const Login = () => {
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        if (name.trim() === '' || lastName.trim() === '' || email.trim() === '' || entity.trim() === '') {
+        if (name.trim() === '' || lastName.trim() === '' || email.trim() === '' || dni.trim() === '' || entity.trim() === '') {
             Swal.fire({
                 icon: 'warning',
                 title: 'Error',
@@ -72,6 +74,8 @@ const Login = () => {
             name: name.trim(),
             lastName: lastName.trim(),
             email: email.trim(),
+            dni: dni.trim(),
+
             entity: entity.trim()
         };
 
@@ -161,6 +165,17 @@ const Login = () => {
                                 placeholder="Correo electrónico"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-field d-flex align-items-center">
+                            <span className="far fa-envelope"></span>
+                            <input
+                                type="number"
+                                name="dni"
+                                id="dni"
+                                placeholder="DNI"
+                                value={dni}
+                                onChange={(e) => setDni(e.target.value)}
                             />
                         </div>
                         <div className="form-field d-flex align-items-center">
